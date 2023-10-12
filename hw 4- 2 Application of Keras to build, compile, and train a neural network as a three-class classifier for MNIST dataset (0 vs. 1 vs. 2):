@@ -1,0 +1,139 @@
+from keras.datasets import mnist
+import matplotlib.pyplot as plt
+import numpy as np
+from random import randint
+from keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.optimizers import SGD
+
+
+#extraction function
+def feature_extract(images):
+  width = images.shape[1]
+  height = images.shape[2]
+
+  features = np.zeros((images.shape[0],4))
+  features_hold = np.sum(images[:,0:int(width/2), 0:int(height/2)], axis = 2)
+
+  features[:,0] = np.sum(features_hold, axis = 1)/((width*height)/4)
+  features_hold = np.sum(images[:,0:int(width/2), 0:int(height/2)], axis = 2) #quadrant 1
+
+  features[:,1] = np.sum(features_hold, axis = 1)/((width*height)/4)
+  features_hold = np.sum(images[:,int(width/2), 0:int(height/2)], axis = 2) #quadrant 2
+
+  features[:,2] = np.sum(features_hold, axis = 1)/((width*height)/4)
+  features_hold = np.sum(images[:,int(width/2), 0:int(height/2)], axis = 2) #quadrant 3
+
+  features[:,3] = np.sum(features_hold, axis = 1)/((width*height)/4)
+  return features
+
+def feature_plot(features, labels, classes):
+  for i in classes:
+    plt.plot(feautres[labels[:]==classes[i],0], feautres[labels[:]==classes[i],1], 'o', markersize = 15)
+
+  plt.xlabel('x: feature 1')
+  plt.ylabel('y: feature 2')
+  plt.legend(['Class' + str(classes[i]) for i in classes])
+  plt.show()
+
+def plot_curve(accuracy_train, loss_train):
+  epochs=np.arange(loss_train.shape[0])
+  plt.subplot(1,2,1)
+  plt.plot(epochs, accuracy_train)
+
+  plt.xlabel('Epoch')
+  plt.ylabel('Accuracy')
+  plt.title('Training Accuracy')
+
+  plt.subplot(1,2,2)
+  plt.plot(epochs, loss_train)
+  plt.xlabel('Epoch')
+  plt.ylabel('Binary crossentropy loss')
+  plt.title('Training loss')
+
+  plt.show()
+
+def main():
+
+  (x_train,y_train),(x_test,y_test) = mnist.load_data()
+  classes = [0,1,2]
+  x_train_012 = x_train[np.logical_or.reduce((y_train==0, y_train==1, y_train==2)), 0:28, 0:28]
+  y_train_012 = y_train[np.logical_or.reduce((y_train==0, y_train==1, y_train==2))]
+
+  x_val_012 = x_train_012[0:500,:,:]
+  y_val_012 = y_train_012[0:500]
+
+
+  x_train_f = np.reshape(x_train, (x_train.shape[0], x_train.shape[1]*x_train.shape[2]))
+  x_val_f = np.reshape(x_val_012, (x_val_012.shape[0], x_val_012.shape[1]*x_val_012.shape[2]))
+  x_test_f = np.reshape(x_test, (x_test.shape[0], x_test.shape[1]*x_test.shape[2]))
+
+  x_train_f = x_train_f.astype('float32')
+  x_val_f = x_val_f.astype('float32')
+  x_test_f = x_test_f.astype('float32')
+  x_train_f /= 255
+  x_val_f /= 255
+  x_test_f /= 255
+
+  feature_train = np.sum(x_train_012[:,12:15,12:15],axis=2)
+  feature_train=np.sum(feature_train,axis=1)/9
+
+  model_a = Sequential()
+  model_a.add(Dense(input_dim = 4, units=300, activation='tanh'))
+  model_a.add(Dense(units=10, activation='tanh'))
+  model_a.add(Dense(units=len(classes), activation='softmax'))
+  model_a.summary()
+  
+  sgd = SGD(lr=.0001, decay = 0.001)
+
+
+  model_a.compile(loss='categorical_crossentropy', optimizer = sgd, metrics=['accuracy'])
+  y_test_012 = np.arange(3)
+
+
+  # #to categorical
+  y_train_012_c = to_categorical(y_train_012, len(classes))
+  y_value_012_c = to_categorical(y_val_012, len(classes))
+  y_test_012_c = to_categorical(y_test_012, len(classes))
+
+  gib_history = model_a.fit(feature_train, y_train_012_c, batch_size=16, epochs=50, verbose=1)
+
+  score = model_a.evaluate(x_val_f, y_value_012_c)
+  print("total loss on validation set: ", score[0])
+  print("accuracy of validation set ", score[1])
+
+
+  feature_plot(feature_train[1:500, 0:2], y_train_012[1:500], classes)
+  feature_plot(feature_train[1:500, 2:4], y_train_012[1:500], classes)
+
+  plt.figure(figsize=[9,5])
+  acc_curve=np.array(gib_history1.history['accuracy'])
+  loss_curve=np.array(gib_history1.history['loss'])
+  plot_curve(acc_curve, loss_curve)
+ 
+
+  # #50 nodes
+  # model_a.add(Dense(units=50, activation='tanh'))
+  # model_a.add(Dense(units=len(classes), activation='softmax'))
+  # model_a.summary()
+
+
+  # #100 nodes
+  # model_a.add(Dense(units=100, activation='tanh'))
+  # model_a.add(Dense(units=len(classes), activation='softmax'))
+  # model_a.summary()
+
+
+  # # 2 layers, 100 nodes, 10 nodes
+  # model_a.add(Dense(units=100, activation='tanh'))
+  # model_a.add(Dense(units=10, activation='softmax'))
+  # model_a.summary()
+
+  # # 2 layers, 100 nodes, 50 nodes
+  # model_a.add(Dense(units=100, activation='tanh'))
+  # model_a.add(Dense(units=50, activation='softmax'))
+  # model_a.summary()
+
+
+main()
