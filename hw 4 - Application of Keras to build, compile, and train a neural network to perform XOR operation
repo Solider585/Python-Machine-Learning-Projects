@@ -1,0 +1,113 @@
+from keras.models import Sequential
+from keras.layers import Dense
+from keras.optimizers import SGD
+import numpy as np
+import matplotlib.pyplot as plt
+
+
+
+
+'''
+plot the points with two different markers
+'''
+def plot_fun_thr(inputs, labels, thre_parms, classes):
+  # print(inputs)
+  # print(labels)
+  # print(thre_parms)
+  # print(classes)
+  plt.plot(inputs[labels[:]==classes[0],0], inputs[labels[:]==classes[0],1], 'rs',
+           inputs[labels[:]==classes[1],0], inputs[labels[:]==classes[1],1], 'g^', 
+           markersize=5)
+  
+  x1 = np.linspace(-2,2,50)
+  x2 = -(thre_parms[0] * x1+thre_parms[2]) / thre_parms[1]
+
+  plt.plot(x1, x2, '-b')
+  plt.xlabel('x: feature 1')
+  plt.ylabel('y: feature 2')
+  plt.legend(['Class' + str(classes[0]), 'Class' + str(classes[1])])
+
+  plt.show()
+  
+def plot_curve(accuracy_train, loss_train):
+  epochs=np.arange(loss_train.shape[0])
+  plt.subplot(1,2,1)
+  plt.plot(epochs, accuracy_train)
+
+  plt.xlabel('Epoch')
+  plt.ylabel('Accuracy')
+  plt.title('Training Accuracy')
+
+  plt.subplot(1,2,2)
+  plt.plot(epochs, loss_train)
+  plt.xlabel('Epoch')
+  plt.ylabel('Binary crossentropy loss')
+  plt.title('Training loss')
+
+  plt.show()
+
+
+def main():
+  '''
+  build the XOR arrays by 4x2 and 4x1
+  '''
+  inputs = np.array([[0,0], [0,1], [1,0],[1,1]])
+  labels = np.array([0,1,1,0])
+
+  model_a = Sequential()
+  model_a.add(Dense(input_dim=2, units=1, activation='sigmoid'))
+  '''
+  model_a.add(Dense(input_dim=2, units=2, activation='tanh'))
+  model_a.add(Dense(units=1, activation='sigmoid'))
+  '''
+  model_a.summary()
+
+  weights = model_a.layers[0].get_weights()
+  thre_parms = np.array(weights[0])
+  thre_parms = np.append(thre_parms,weights[1] )
+  classes = [0,1]
+
+  sgd = SGD(lr=0.1)
+
+  
+  # plot_fun_thr(inputs, labels, thre_parms, classes)
+
+  #compile network
+  model_a.compile(loss = 'binary_crossentropy', optimizer = sgd, metrics=['accuracy'])
+  gib_history1 = model_a.fit(inputs, labels, batch_size=1, epochs=200, verbose=1)
+  plot_fun_thr(inputs, labels, thre_parms, classes)
+
+  plt.figure(figsize=[9,5])
+  acc_curve=np.array(gib_history1.history['accuracy'])
+  loss_curve=np.array(gib_history1.history['loss'])
+  plot_curve(acc_curve, loss_curve)
+
+
+
+
+  # #add 2 more nodes
+  inputs_here = np.array([[0,0], [0,1], [1,0],[1,1]])
+  labels_change = np.array([0,1,1,0], dtype=np.uint8)
+
+  print("adding  2 new nodes")
+  model_b = Sequential()
+  model_b.add(Dense(input_dim=2, units=2, activation='tanh'))
+  model_b.add(Dense(units=1, activation='sigmoid'))
+  model_b.summary()  
+
+  model_b.compile(loss = 'binary_crossentropy', optimizer = sgd, metrics=['accuracy'])
+  gib_history2 = model_b.fit(inputs, labels, batch_size=3, epochs=400, verbose=1)
+
+  inputs_here = (inputs_here-np.mean(inputs_here,axis=0))/np.std(inputs_here, axis=0)
+
+  plot_fun_thr(inputs_here, labels_change, thre_parms, classes)
+
+   # weights2 = model_b.layers[0].get_weights()
+
+  # plt.figure(figsize=[9,5])
+  acc_curve=np.array(gib_history2.history['accuracy'])
+  loss_curve=np.array(gib_history2.history['loss'])
+  plot_curve(acc_curve, loss_curve)
+
+
+main()
