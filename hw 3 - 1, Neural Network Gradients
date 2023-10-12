@@ -1,0 +1,131 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+class NeuralNetwork(object):
+    """
+    def __init__(self): that initializes a 3x1 weight vector randomly and initializes the learning rate to 1.
+    """
+
+    def __init__(self, num_params=2):
+        self.weight_matrix = 2 * np.random.random((num_params + 1)) - 1
+
+        self.l_rate = 1
+
+    '''
+    def hard_limiter(self, x):that performs the hard-limiter activation on the nx1 vector x
+    '''
+
+    def hard_limiter(self, x):
+        outs = np.zeros(x.shape)
+        outs[x > 0] = 1
+        return outs
+
+    """
+    def forward_propagation(self, inputs):that performs the forward propagation by 
+    multiplying the inputs by the neuron weights and passing the output through the hard_limiteractivation function.
+    """
+
+    def forward_propagation(self, inputs):
+        # outs = np.dot(inputs, self.weight_matrix)
+        # return self.hard_limiter(outs)
+        return self.hard_limiter(np.dot(inputs, self.weight_matrix))
+
+    """
+    def pred(self,inputs):classifies the inputs to either class 0 or 1 by multiplying 
+    them by the neuron weights, passing the output through the hard_limiteractivation function and thresholding.
+    """
+
+    def predict(self, inputs):
+        prob = self.hard_limiter(inputs)
+        pred = np.int8(prob >= 0.5)
+        return pred
+
+    """
+    def train(self, inputs, labels, num_train_iterations=10):
+    that performs the perceptron learning rule for num_train_iterationstimes using the inputs and labels.
+    """
+
+    def train(self, train_inputs, train_outputs, num_train_iterations=10):
+        # number of iterations
+        for iteration in range(num_train_iterations):
+
+            for i in range(train_inputs.shape[0]):
+                pred_i = self.predict(train_inputs[i, :])
+                print(pred_i, train_outputs[i])
+                if pred_i.all() != train_outputs[i]:
+                    outputs = self.forward_propagation(train_inputs[i, :])
+
+                    # error output
+                    error = train_outputs[i] - outputs
+
+                    # multiply the error by input,
+                    adjustment = self.l_rate * error * train_inputs[i]
+
+                    # adjust weight matrix
+                    self.weight_matrix += adjustment
+
+                    print('Iteration #' + str(iteration))
+                    plot_fun_thr(train_inputs, train_outputs, self.weight_matrix, classes)
+
+
+def plot_fun_thr(x1_and_x2_inputs, x1_inputs_only, three_parameters, classes_1):
+    plt.plot(x1_and_x2_inputs[x1_inputs_only[:] == classes_1[0], 0], x1_and_x2_inputs[x1_inputs_only[:] == classes_1[0], 1], 'rs',
+             x1_and_x2_inputs[x1_inputs_only[:] == classes_1[1], 0], x1_and_x2_inputs[x1_inputs_only[:] == classes_1[1], 1], 'g^')
+    plt.axis([-1, 2, -1, 2])
+
+    x1 = np.linspace(-1, 2, 50)
+    x2 = -(three_parameters[0] * x1 + three_parameters[2]) / three_parameters[1]
+    plt.plot(x1, x2, '-b')
+    plt.xlabel('x: feature 1')
+    plt.ylabel('y: feature 2')
+    plt.legend(['Class' + str(classes_1[0]), 'Class' + str(classes_1[1]), 'LineSpace'])
+
+    plt.show()
+    plt.show()
+
+
+if __name__ == "__main__":
+    """
+    Create an np array of the shape of 6x2 that contains the inputs, 
+    and another array with the shape of 6x1 that contains the labels
+    inputs from prob 3 or hw 2 :
+    (1,1), (1,0) , (0,1), (-1,-1), (-1,0), (-1,1)
+    """
+
+    features = np.array([[1, 1], [1, 0], [0, 1], [-1, -1], [-1, 0], [-1, 1]])
+    print(features)
+    labels = np.array([1, 1, 0, -1, -1, -1])
+    print(labels)
+    classes = [0, 1]
+
+    # plot_fun(features,  labels, classes)
+
+    """
+    Add the bias to the input array to have a 6x3 shape.
+    """
+    bias = np.ones((features.shape[0], 1))
+    print(bias)
+
+    features = np.append(features, bias, axis=1)
+    print(features)
+
+    """
+    Create the network with one perceptron using the class NeuralNetwork(), 
+    then train it using train(inputs, labels,100) function.
+    """
+    neural_network = NeuralNetwork(2)
+    print('Random weights at the start of training')
+    print(neural_network.weight_matrix)
+    neural_network.train(features, labels, 100)
+
+    print('New  weights after Training')
+    print(neural_network.weight_matrix)
+
+
+    print("Testing network with data points")
+    print(neural_network.predict(features))
+
+
+    print("Testing prediction of network with new points from test data sample")
+    print(neural_network.predict(np.array([2, 2, 0, -2])))
