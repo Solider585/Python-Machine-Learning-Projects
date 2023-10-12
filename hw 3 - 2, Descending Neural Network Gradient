@@ -1,0 +1,126 @@
+import matplotlib.pyplot as plt
+import numpy as np
+from numpy import random, dot
+
+
+class GradientDescendingNeuralNetwork(object):
+    """
+    i.def __init__(self, learning_r): that initializes a 3x1 weight vector randomly and initializes the
+    learning rate to learning_r. Also, it creates a history variable that saves the weights and the
+    training cost after each epoch(i.e., iteration).
+    """
+
+    def __init__(self):
+        # generate random weights
+        random.seed(1)
+
+        # 3x1 matrix
+        self.weights_matrix = 2 * random.random((3, 1)) - 1
+
+        # learning  rate
+        self.l_rate = 1
+
+    @staticmethod
+    def sigmoid(x):
+        return 1 / (1 + np.exp(-x))
+
+    """
+    def forward_propagation(self, inputs):that performs the forward propagation
+    by multiplying the inputs by the neuron weights and then generating the output
+    """
+
+    def forward_propagation(self, inputs):
+        # outs = np.dot(inputs, self.weights)
+        # return self.sigmoid(outs)
+        return self.sigmoid(dot(inputs, self.weights_matrix))
+
+    """
+    def train(self, inputs_train, labels_train, num_train_epochs=10):that performs the gradient descent learning rule 
+    for num_train_epochs times using the inputs and labels. This function also saves the weights and costs at every
+    epoch to the history variable.
+    """
+
+    def train(self, inputs_train, outputs_train, num_train_epochs=10):
+        gradient = inputs_train.shape[0]
+
+        for iteration in range(num_train_epochs):
+            outputs = self.forward_propagation(inputs_train)
+
+            # error calculation
+            error = inputs_train - outputs
+            adjustments = (self.l_rate / gradient) * np.sum(np.multiply(error, inputs_train), axis=0)
+
+            print(np.sum(np.multiply(error, inputs_train), axis=0))
+            print(adjustments.shape)
+
+            # adjust matrix
+            self.weights_matrix[:, 0] += adjustments
+
+            print('Iteration #' + str(iteration))
+            if iteration == 0 or (iteration % 5) == 0:
+                plot_fun_thr(inputs_train[:, 0:2], outputs_train[:, 0], self.weights_matrix[:, 0], classes)
+            
+
+
+def plot_fun_thr(x1_and_x2_inputs, x1_inputs_only, three_parameters, classes_1):
+    plt.plot(x1_and_x2_inputs[x1_inputs_only[:] == classes_1[0], 0], x1_and_x2_inputs[x1_inputs_only[:] == classes_1[0], 1], 'rs',
+             x1_and_x2_inputs[x1_inputs_only[:] == classes_1[1], 0], x1_and_x2_inputs[x1_inputs_only[:] == classes_1[1], 1], 'g^')
+    plt.axis([-1, 2, -1, 2])
+
+    x1 = np.linspace(-1, 2, 50)
+    x2 = -(three_parameters[0] * x1 + three_parameters[2]) / three_parameters[1]
+    plt.plot(x1, x2, '-b')
+    plt.xlabel('x: feature 1')
+    plt.ylabel('y: feature 2')
+    plt.legend(['Class' + str(classes_1[0]), 'Class' + str(classes_1[1])])
+
+    plt.show()
+#
+# classes = [0,1]
+# plot_fun(features,labes,classes)
+
+# def main():
+if __name__ == "__main__":
+    """
+    Create an np array of a shape 10x2 that contains the inputs, 
+    and another array with a shape 10x1 that contains the labels
+    (1,1), (1,0) , (0,1), (-1,-1), (.5, 3), (.7, 2), (-1, 0), (-1, 1), (2, 0), (-2, -1)
+    """
+
+    features = np.array([[1, 1], [1, 0], [0, 1], [-1, -1], [.5, 3], [.7, 2], [-1, 0], [-1, 1], [2, 0], [-2, -1]])
+    print(features)
+    labels = np.array([1, 1, 0, -1, .5, .7, -1, -1, 2, -2])
+    print(labels)
+
+    classes = [0, 1]
+
+    # plot_fun(features, labels, classes)
+    """
+    Add the bias to the input array to have a 10x3 shape.
+    """
+    bias = np.ones((features.shape[0], 1))
+    print(bias)
+
+    features = np.append(features, bias, axis=1)
+    print(features.shape)
+
+    """
+    Create the network with one neuronusing the class NeuralNetwork() with 
+    learning rate of 1 then train it using train(inputs, labels,50) function.
+    """
+    neural_network = GradientDescendingNeuralNetwork()
+    print('Random weights at the start of training')
+    print(neural_network.weights_matrix)
+    neural_network.train(features, np.expand_dims(labels, axis=1), 50)
+
+    print('New  weights after Training')
+    print(neural_network.weights_matrix)
+
+    # print("Testing network with data points")
+    # print(neural_network.predict(features))
+
+    # print("Testing network with new points")
+
+
+# if __name__ == "__main__":
+#     main()
